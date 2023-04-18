@@ -18,7 +18,7 @@
 
 from optparse import OptionParser
 
-from util import uniq
+from m2scorer.util import uniq
 import re
 import sys
 from copy import deepcopy

@@ -1,13 +1,12 @@
 #!/usr/bin/python
 
 import sys
-import levenshtein
+import m2scorer.levenshtein
 from getopt import getopt
-from util import paragraphs
-from util import smart_open
-from levenshtein import equals_ignore_whitespace_casing
-from levenshtein import levenshtein_matrix, edit_graph, merge_graph, transitive_arcs
-import levenshtein
+from m2scorer.util import paragraphs
+from m2scorer.util import smart_open
+from m2scorer.levenshtein import equals_ignore_whitespace_casing
+from m2scorer.levenshtein import levenshtein_matrix, edit_graph, merge_graph, transitive_arcs
 
 def print_usage():
     print("Usage: m2scorer.py [OPTIONS] source target", file=sys.stderr)

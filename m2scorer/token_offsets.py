@@ -24,8 +24,8 @@
 import sys
 import re
 import os
-from util import *
-from Tokenizer import PTBTokenizer
+from m2scorer.util import *
+from m2scorer.Tokenizer import PTBTokenizer
 
 
 assert len(sys.argv) == 1

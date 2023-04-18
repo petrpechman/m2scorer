@@ -30,10 +30,10 @@
 #
 
 import sys
-import levenshtein
+import m2scorer.levenshtein
 from getopt import getopt
-from util import paragraphs
-from util import smart_open
+from m2scorer.util import paragraphs
+from m2scorer.util import smart_open
 
 
 
