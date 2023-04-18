@@ -94,48 +94,51 @@ def print_usage():
     print("        --ignore_whitespace_casing  -  Ignore edits that only affect whitespace and caseing. Default no.", file=sys.stderr)
 
 
+def main():
+    max_unchanged_words=2
+    beta = 0.5
+    ignore_whitespace_casing= False
+    verbose = False
+    very_verbose = False
+    opts, args = getopt(sys.argv[1:], "v", ["max_unchanged_words=", "beta=", "verbose", "ignore_whitespace_casing", "very_verbose"])
+    for o, v in opts:
+        if o in ('-v', '--verbose'):
+            verbose = True
+        elif o == '--very_verbose':
+            very_verbose = True
+        elif o == '--max_unchanged_words':
+            max_unchanged_words = int(v)
+        elif o == '--beta':
+            beta = float(v)
+        elif o == '--ignore_whitespace_casing':
+            ignore_whitespace_casing = True
+        else:
+            print("Unknown option :", o, file=sys.stderr)
+            print_usage()
+            sys.exit(-1)
 
-max_unchanged_words=2
-beta = 0.5
-ignore_whitespace_casing= False
-verbose = False
-very_verbose = False
-opts, args = getopt(sys.argv[1:], "v", ["max_unchanged_words=", "beta=", "verbose", "ignore_whitespace_casing", "very_verbose"])
-for o, v in opts:
-    if o in ('-v', '--verbose'):
-        verbose = True
-    elif o == '--very_verbose':
-        very_verbose = True
-    elif o == '--max_unchanged_words':
-        max_unchanged_words = int(v)
-    elif o == '--beta':
-        beta = float(v)
-    elif o == '--ignore_whitespace_casing':
-        ignore_whitespace_casing = True
-    else:
-        print("Unknown option :", o, file=sys.stderr)
+    # starting point
+    if len(args) != 2:
         print_usage()
         sys.exit(-1)
 
-# starting point
-if len(args) != 2:
-    print_usage()
-    sys.exit(-1)
+    system_file = args[0]
+    gold_file = args[1]
 
-system_file = args[0]
-gold_file = args[1]
+    # load source sentences and gold edits
+    source_sentences, gold_edits = load_annotation(gold_file)
 
-# load source sentences and gold edits
-source_sentences, gold_edits = load_annotation(gold_file)
+    # load system hypotheses
+    fin = smart_open(system_file, 'r')
+    system_sentences = [line.strip() for line in fin.readlines()]
+    fin.close()
 
-# load system hypotheses
-fin = smart_open(system_file, 'r')
-system_sentences = [line.strip() for line in fin.readlines()]
-fin.close()
+    p, r, f1 = m2scorer.levenshtein.batch_multi_pre_rec_f1(system_sentences, source_sentences, gold_edits, max_unchanged_words, beta, ignore_whitespace_casing, verbose, very_verbose)
 
-p, r, f1 = levenshtein.batch_multi_pre_rec_f1(system_sentences, source_sentences, gold_edits, max_unchanged_words, beta, ignore_whitespace_casing, verbose, very_verbose)
+    print("Precision   : %.4f" % p)
+    print("Recall      : %.4f" % r)
+    print("F_%.1f       : %.4f" % (beta, f1))
 
-print("Precision   : %.4f" % p)
-print("Recall      : %.4f" % r)
-print("F_%.1f       : %.4f" % (beta, f1))
 
+if __name__ == "__main__":
+    main()
