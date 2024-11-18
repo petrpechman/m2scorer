@@ -8,5 +8,9 @@ setup(
     author='Petr Pechman',
     author_email='hugo.pechman@outlook.com',
     packages=['m2scorer'],
+        entry_points="""
+        [console_scripts]
+        m2scorer=m2scorer.m2scorer:main
+    """,
     install_requires=[]
 )
