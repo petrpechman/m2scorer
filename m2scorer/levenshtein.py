@@ -765,6 +765,51 @@ def edit_graph(levi_matrix, backpointers):
             pass
     return (V, E, dist, edits)
 
+# build edit graph
+def edit_graph_fast(levi_matrix, backpointers, border_limit = None):
+    V = []
+    E = []
+    dist = {}
+    edits = {}
+    # breath-first search through the matrix
+    v_start = (len(levi_matrix)-1, len(levi_matrix[0])-1)
+    queue = [v_start]
+    # MS start
+    v_border = (-1, -1)
+    border_count = 0
+    queue.append(v_border)
+    # MS end
+    while len(queue) > 0:
+        v = queue[0]
+        queue = queue[1:]
+        # MS start
+        if v == v_border:
+            if border_count:
+                queue.append(v_border)
+            border_count = 0
+            continue
+        # MS end
+        if v in V:
+            continue
+        V.append(v)
+        try:
+            for vnext_edits in backpointers[v]:
+                vnext = vnext_edits[0]
+                # MS start
+                border_count += 1
+                if border_limit and border_count > border_limit:
+                    continue
+                # MS end
+                edit_next = vnext_edits[1]
+                E.append((vnext, v))
+                dist[(vnext, v)] = 1
+                edits[(vnext, v)] = edit_next
+                if not vnext in queue:
+                    queue.append(vnext)
+        except KeyError:
+            pass
+    return (V, E, dist, edits)
+
 # merge two lattices, vertices, edges, and distance and edit table
 def merge_graph(V1, V2, E1, E2, dist1, dist2, edits1, edits2):
     # vertices
@@ -863,7 +908,7 @@ def levenshtein_matrix(first, second, cost_ins=1, cost_del=1, cost_sub=2):
                     backpointers[(i, j)] = [((i,j-1), edit)]
     return (distance_matrix, backpointers)
 
-def batch_multi_pre_rec_f1_part(candidates, sources, gold_edits, max_unchanged_words=2, beta=0.5, ignore_whitespace_casing= False, verbose=False, very_verbose=False):
+def batch_multi_pre_rec_f1_part(candidates, sources, gold_edits, max_unchanged_words=2, beta=0.5, ignore_whitespace_casing= False, verbose=False, very_verbose=False, limit=None):
     assert len(candidates) == len(sources) == len(gold_edits)
     stat_correct = 0.0
     stat_proposed = 0.0
@@ -879,8 +924,12 @@ def batch_multi_pre_rec_f1_part(candidates, sources, gold_edits, max_unchanged_w
         lmatrix2, backpointers2 = levenshtein_matrix(source_tok, candidate_tok, 1, 1, 2)
 
         #V, E, dist, edits = edit_graph(lmatrix, backpointers)
-        V1, E1, dist1, edits1 = edit_graph(lmatrix1, backpointers1)
-        V2, E2, dist2, edits2 = edit_graph(lmatrix2, backpointers2)
+        if limit is None:
+            V1, E1, dist1, edits1 = edit_graph_fast(lmatrix1, backpointers1, limit)
+            V2, E2, dist2, edits2 = edit_graph_fast(lmatrix2, backpointers2, limit)
+        else:
+            V1, E1, dist1, edits1 = edit_graph(lmatrix1, backpointers1)
+            V2, E2, dist2, edits2 = edit_graph(lmatrix2, backpointers2)
 
         V, E, dist, edits = merge_graph(V1, V2, E1, E2, dist1, dist2, edits1, edits2)
         if very_verbose:
